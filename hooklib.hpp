@@ -99,7 +99,7 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* 
 		printf("\n"); \
 	}
 #else
-#define LOG(fmt,...)
+#define HOOKLIB_LOG(fmt,...)
 #endif
 
 #define HOOKLIB_FUNCTION_PTR(returnType, callingConvention, function, location, ...) \
