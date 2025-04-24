@@ -61,6 +61,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 ### Signature Hooks
 See https://github.com/mos9527/UnityUnsplash
 ```c++
+#define HOOKLIB_MODULE_NAME L"UnityPlayer"
 #include "hooklib.hpp"
 
 SIG_SCAN

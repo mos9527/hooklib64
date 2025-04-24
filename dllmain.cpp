@@ -21,8 +21,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
             freopen("CONOUT$", "w", stdout);
             freopen("CONOUT$", "w", stderr);
 #endif
-            HOOKLIB_INSTALL_HOOK(_Shell_NotifyIconA);
-            printf("All good.\n");
+            HOOKLIB_INSTALL_HOOK(_Shell_NotifyIconA);            
             break;
         }
         case DLL_THREAD_ATTACH:

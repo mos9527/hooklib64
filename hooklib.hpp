@@ -74,6 +74,9 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, size_t
 FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* hint)
 {
     const MODULEINFO* info = hooklibGetModuleInfo();
+    if (info == nullptr)
+        return nullptr;
+
     const size_t sigSize = strlen(mask);
 
     // Ensure hint address is within the process memory region so there are no crashes.
@@ -151,7 +154,7 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* 
         { \
             if constexpr (x##Size == 2) \
             { \
-                x##Addr = sigScan(x##Data[0], x##Data[1], (void*)(y)); \
+                x##Addr = hooklibSigScan(x##Data[0], x##Data[1], (void*)(y)); \
                 if (x##Addr) \
                     return x##Addr; \
             } \
@@ -159,7 +162,7 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* 
             { \
                 for (int i = 0; i < x##Size; i += 2) \
                 { \
-                    x##Addr = sigScan(x##Data[i], x##Data[i + 1], (void*)(y)); \
+                    x##Addr = hooklibSigScan(x##Data[i], x##Data[i + 1], (void*)(y)); \
                     if (x##Addr) \
                         return x##Addr; \
                 } \
