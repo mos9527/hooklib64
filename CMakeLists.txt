@@ -6,8 +6,9 @@ project(hooklib)
 include_directories(CMAKE_SOURCE_DIR .)
 include_directories(${CMAKE_SOURCE_DIR}/detours/include)
 
+link_libraries(${CMAKE_SOURCE_DIR}/detours/lib/detours.lib)
 add_library(dllmain SHARED dllmain.cpp)
-target_link_libraries(dllmain PUBLIC ${CMAKE_SOURCE_DIR}/detours/lib/detours.lib)
+add_executable(demo "demo.cpp")
 
 function(copy_as name)
 	# Copy dllmain.dll

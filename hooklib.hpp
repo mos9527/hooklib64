@@ -111,6 +111,10 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* 
 #define HOOKLIB_PROC_ADDRESS(libraryName, procName) \
 	GetProcAddress(LoadLibrary(TEXT(libraryName)), procName)
 
+#define HOOKLIB_RUNTIME_FUNCTION(returnType, callingConvention, libraryName, procName, ...) \
+	typedef returnType callingConvention _##procName(__VA_ARGS__); \
+	_##procName* procName = (_##procName*)HOOKLIB_PROC_ADDRESS(libraryName, #procName); 
+
 #define HOOKLIB_HOOK(returnType, callingConvention, functionName, location, ...) \
 	typedef returnType callingConvention _##functionName(__VA_ARGS__); \
 	_##functionName* original##functionName = (_##functionName*)(location); \

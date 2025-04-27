@@ -1,5 +1,5 @@
 #define HOOKLIB_MODULE_NAME NULL
-#include "hooklib.hpp"
+#include <hooklib.hpp>
 
 HOOKLIB_HOOK(BOOL, __stdcall, _Shell_NotifyIconA, &Shell_NotifyIconW, DWORD dwMessage, _In_ PNOTIFYICONDATAA lpData)
 {	
@@ -10,8 +10,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
     LPVOID lpReserved
 )
-{
-    if (HOOKLIB_IS_PROCESS(L"GameViewer.exe")) {
+{	    if (HOOKLIB_IS_PROCESS(L"GameViewer.exe")) {
         switch (ul_reason_for_call)
         {
         case DLL_PROCESS_ATTACH:
