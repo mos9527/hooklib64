@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.20)
 set(CMAKE_CXX_STANDARD 20)
 
 project(hooklib)
@@ -9,7 +9,17 @@ include_directories(${CMAKE_SOURCE_DIR}/detours/include)
 link_libraries(${CMAKE_SOURCE_DIR}/detours/lib/detours.lib)
 add_library(dllmain SHARED dllmain.cpp)
 add_executable(demo "demo.cpp")
-
+target_compile_options(demo PUBLIC /GR- /GS-)
+target_link_options(
+	demo PUBLIC 
+	/OPT:REF /OPT:ICF 
+	# No CRT
+	/SUBSYSTEM:WINDOWS /ENTRY:main /NODEFAULTLIB /INCREMENTAL:NO 
+	# Minimal alignment
+	/ALIGN:16
+	# Merge sections
+	/MERGE:.pdata=.text
+)
 function(copy_as name)
 	# Copy dllmain.dll
 	add_custom_command(TARGET dllmain POST_BUILD

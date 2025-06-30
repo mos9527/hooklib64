@@ -5,6 +5,10 @@ static_assert(false && "HOOKLIB_MODULE_NAME undefined. Change this to the Image 
 #endif // !MODULE_NAME
 #define WIN32_LEAN_AND_MEAN
 
+#ifdef HOOKLIB_NO_DLL_SPOOFING
+// If you don't want to spoof the DLL exports, define this macro.
+#endif
+
 /* DEFINES END */
 
 /* INCLUDES BEGIN */
@@ -176,7 +180,7 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* 
     }
 /* MACROS END */
 
-
+#ifndef HOOKLIB_NO_DLL_SPOOFING
 /* DLL SPOOFING BEGIN */
 //  C:\Windows\System32\d3d9.dll (d3d9)
 #pragma comment(linker, "/EXPORT:D3DPERF_BeginEvent=C:\\Windows\\System32\\d3d9.D3DPERF_BeginEvent")
@@ -575,4 +579,5 @@ FORCEINLINE void* hooklibSigScan(const char* signature, const char* mask, void* 
 #pragma comment(linker, "/EXPORT:VerLanguageNameW=C:\\Windows\\System32\\version.VerLanguageNameW")
 #pragma comment(linker, "/EXPORT:VerQueryValueA=C:\\Windows\\System32\\version.VerQueryValueA")
 #pragma comment(linker, "/EXPORT:VerQueryValueW=C:\\Windows\\System32\\version.VerQueryValueW")
+#endif
 /* DLL SPOOFING END */
