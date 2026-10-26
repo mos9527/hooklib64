@@ -17,6 +17,7 @@ HOOKLIB_HOOK(void, __fastcall, _SetSplashScreenState, sigSetSplashScreenState201
     original_SetSplashScreenState(3);
 }
 
+// Declare DLLMain with this macro within the same thread that loaded the DLL.
 HOOKLIB_DLLMAIN()
 {
     if (!HOOKLIB_SIG_SCAN(sigSetSplashScreenState2019))

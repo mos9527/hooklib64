@@ -1,5 +1,6 @@
 import argparse
 import ctypes
+import json
 from pathlib import Path
 import struct
 import sys
@@ -13,7 +14,7 @@ def system_directory(function_name, optional=False):
     function = getattr(kernel32, function_name)
     function.argtypes = (ctypes.POINTER(ctypes.c_wchar), ctypes.c_uint)
     function.restype = ctypes.c_uint
-    buffer = ctypes.create_unicode_buffer(32768)
+    buffer = ctypes.create_unicode_buffer(260)
     length = function(buffer, len(buffer))
     if not length:
         if optional:
@@ -130,22 +131,52 @@ class PEExports:
                 lines.append('    "' + alias + '"=' + forwarder + " @" + str(ordinal) + " NONAME")
         return "\n".join(lines) + "\n"
 
+    def pragmas(self, forward_path):
+        module_path = str(forward_path.with_suffix(""))
+        if any(ord(char) < 32 or char in '\";,=' for char in module_path):
+            raise ValueError("Invalid forwarding path")
+        lines = ["#if !defined(_MSC_VER)", '#error "Proxy exports require MSVC-compatible linker pragmas"', "#endif", ""]
+        exported_names = {name for names in self.entries.values() for name in names}
+        for ordinal, names in sorted(self.entries.items()):
+            if names:
+                for export_name in names:
+                    if any(char.isspace() or char in ',=\\' for char in export_name):
+                        raise ValueError("Export name cannot be represented in a linker pragma")
+                    forwarder = module_path + "." + export_name
+                    if any(char.isspace() for char in forwarder):
+                        forwarder = '"' + forwarder + '"'
+                    directive = "/EXPORT:" + export_name + "=" + forwarder + ",@" + str(ordinal)
+                    lines.append("#pragma comment(linker, " + json.dumps(directive, ensure_ascii=False) + ")")
+            else:
+                alias = "hooklib_ordinal_" + str(ordinal)
+                while alias in exported_names:
+                    alias += "_"
+                forwarder = module_path + ".#" + str(ordinal)
+                if any(char.isspace() for char in forwarder):
+                    forwarder = '"' + forwarder + '"'
+                directive = "/EXPORT:" + alias + "=" + forwarder + ",@" + str(ordinal) + ",NONAME"
+                lines.append("#pragma comment(linker, " + json.dumps(directive, ensure_ascii=False) + ")")
+        return "\n".join(lines) + "\n"
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate a proxy DLL definition from local system exports")
+    parser = argparse.ArgumentParser(description="Generate proxy DLL exports from local system exports")
     parser.add_argument("--dll", choices=DLL_NAMES, required=True)
     parser.add_argument("--arch", choices=("x86", "x64"), required=True)
+    parser.add_argument("--format", choices=("def", "pragma"), default="def")
     parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args()
     if sys.platform != "win32":
         parser.error("Proxy export generation requires a Windows build host")
     read_path, forward_path = dll_paths(arguments.dll, arguments.arch)
-    definition = PEExports(read_path.read_bytes(), arguments.arch).definition(arguments.dll, forward_path)
+    exports = PEExports(read_path.read_bytes(), arguments.arch)
+    content = (exports.pragmas(forward_path) if arguments.format == "pragma"
+               else exports.definition(arguments.dll, forward_path))
     arguments.output.parent.mkdir(parents=True, exist_ok=True)
-    if arguments.output.exists() and arguments.output.read_text(encoding="utf-8") == definition:
+    if arguments.output.exists() and arguments.output.read_text(encoding="utf-8") == content:
         return
-    temporary = arguments.output.with_suffix(".def.tmp")
-    temporary.write_text(definition, encoding="utf-8")
+    temporary = arguments.output.with_suffix(arguments.output.suffix + ".tmp")
+    temporary.write_text(content, encoding="utf-8")
     temporary.replace(arguments.output)
 
 

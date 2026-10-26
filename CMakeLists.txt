@@ -61,19 +61,23 @@ function(hooklib_add_proxy target dll_name)
 	else()
 		set(_arch x86)
 	endif()
-	set(_definition "${CMAKE_CURRENT_BINARY_DIR}/hooklib-proxies/${target}/${dll_name}.def")
-	add_custom_command(OUTPUT "${_definition}"
+	set(_proxy_source "${CMAKE_CURRENT_BINARY_DIR}/hooklib-proxies/${target}/${dll_name}_exports.cpp")
+	add_custom_command(OUTPUT "${_proxy_source}"
 		COMMAND "${Python3_EXECUTABLE}" "${_source_dir}/tools/generate_proxy.py"
-			--dll "${dll_name}" --arch "${_arch}" --output "${_definition}"
+			--dll "${dll_name}" --arch "${_arch}" --format pragma --output "${_proxy_source}"
 		DEPENDS "${_source_dir}/tools/generate_proxy.py"
 		VERBATIM
-		COMMENT "Generating ${_arch} ${dll_name}.dll exports from the build host"
+		COMMENT "Generating ${_arch} ${dll_name}.dll linker pragmas from the build host"
 	)
-	add_custom_target("${target}_hooklib_proxy" DEPENDS "${_definition}")
+	add_custom_target("${target}_hooklib_proxy" DEPENDS "${_proxy_source}")
 	add_dependencies("${target}" "${target}_hooklib_proxy")
+	target_sources("${target}" PRIVATE "${_proxy_source}")
+	set_source_files_properties("${_proxy_source}" PROPERTIES
+		GENERATED TRUE
+		SKIP_UNITY_BUILD_INCLUSION TRUE
+		COMPILE_OPTIONS /utf-8
+	)
 	target_link_libraries("${target}" PRIVATE hooklib::hooklib)
-	target_link_options("${target}" PRIVATE "/DEF:${_definition}")
-	set_property(TARGET "${target}" APPEND PROPERTY LINK_DEPENDS "${_definition}")
 	set_target_properties("${target}" PROPERTIES
 		HOOKLIB_PROXY "${dll_name}"
 		OUTPUT_NAME "${dll_name}"

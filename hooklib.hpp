@@ -537,6 +537,14 @@ inline LONG initializeAsync() noexcept
     extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize(); \
     extern "C" BOOL APIENTRY DllMain(HMODULE, DWORD reason, LPVOID) \
     { \
+        return reason != DLL_PROCESS_ATTACH || HooklibInitialize() == NO_ERROR; \
+    } \
+    extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize()
+
+#define HOOKLIB_DLLMAIN_ASYNC() \
+    extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize(); \
+    extern "C" BOOL APIENTRY DllMain(HMODULE, DWORD reason, LPVOID) \
+    { \
         return reason != DLL_PROCESS_ATTACH || hooklib::initializeAsync<HooklibInitialize>() == NO_ERROR; \
     } \
     extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize()
