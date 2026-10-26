@@ -9,7 +9,9 @@ BOOL WINAPI implOfShellNotifyIconW(DWORD message, PNOTIFYICONDATAW data)
     return TRUE;
 }
 
-extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize()
+// Declare DLLMain with this macro.
+// Internally, this spawns a new thread and calls the following initializer.
+HOOKLIB_DLLMAIN()
 {
     if (!HOOKLIB_IS_PROCESS(L"GameViewer.exe"))
         return ERROR_NOT_SUPPORTED;

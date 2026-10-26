@@ -507,6 +507,40 @@ inline void* hooklibSigScan(const char* signature, const char* mask, void* hint,
 #define HOOKLIB_LOG(fmt, ...) ((void)0)
 #endif
 
+namespace hooklib
+{
+namespace detail
+{
+template<auto Initialize>
+inline DWORD WINAPI initializeThread(LPVOID)
+{
+    const LONG error = Initialize();
+    HOOKLIB_LOG("hooklib initialization: %ld", error);
+    return static_cast<DWORD>(error);
+}
+}
+
+template<auto Initialize>
+inline LONG initializeAsync() noexcept
+{
+    static_assert(std::is_invocable_r_v<LONG, decltype(Initialize)>,
+        "Expected a no-argument initializer returning a LONG error code.");
+    const HANDLE thread = CreateThread(nullptr, 0, detail::initializeThread<Initialize>, nullptr, 0, nullptr);
+    if (!thread)
+        return static_cast<LONG>(GetLastError());
+    CloseHandle(thread);
+    return NO_ERROR;
+}
+}
+
+#define HOOKLIB_DLLMAIN() \
+    extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize(); \
+    extern "C" BOOL APIENTRY DllMain(HMODULE, DWORD reason, LPVOID) \
+    { \
+        return reason != DLL_PROCESS_ATTACH || hooklib::initializeAsync<HooklibInitialize>() == NO_ERROR; \
+    } \
+    extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize()
+
 #define HOOKLIB_FUNCTION_PTR(returnType, callingConvention, function, location, ...) \
     returnType (callingConvention *function)(__VA_ARGS__) = \
         hooklib::detail::addressCast<returnType (callingConvention *)(__VA_ARGS__)>(location)

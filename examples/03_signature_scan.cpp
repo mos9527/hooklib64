@@ -17,7 +17,7 @@ HOOKLIB_HOOK(void, __fastcall, _SetSplashScreenState, sigSetSplashScreenState201
     original_SetSplashScreenState(3);
 }
 
-extern "C" __declspec(dllexport) LONG WINAPI HooklibInitialize()
+HOOKLIB_DLLMAIN()
 {
     if (!HOOKLIB_SIG_SCAN(sigSetSplashScreenState2019))
         return static_cast<LONG>(GetLastError());
