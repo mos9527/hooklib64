@@ -1,4 +1,5 @@
-﻿#include <hooklib.hpp>
+﻿// Loads kernel32.dll at runtime and then calls GetCurrentProcessId
+#include <hooklib.hpp>
 
 int main()
 {
